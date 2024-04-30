@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>認証 | Met's Server!!!</title>
+        <script
+            src="https://www.google.com/recaptcha/api.js"
+            async
+            defer
+        ></script>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/destyle.css@4.0.1/destyle.min.css"
+        />
+    </head>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap");
+        body {
+            position: absolute;
+            background-color: #313338;
+            color: #ddd;
+            font-family: "Noto Sans JP", sans-serif;
+            font-optical-sizing: auto;
+            font-weight: 300;
+            font-style: normal;
+            text-align: center;
+            width: 100%;
+            height: 100vh;
+            animation: fadeOut 1.2s ease 0s;
+        }
+        @keyframes fadeOut {
+            0% {
+                overflow: hidden;
+                transform: scale(1.1);
+            }
+            100% {
+                overflow: hidden;
+                transform: scale(1);
+            }
+        }
+        a {
+            color: #ccf;
+        }
+        .loading {
+            z-index: 1000;
+            position: absolute;
+            width: 100%;
+            height: 100vh;
+            background-color: #313338ff;
+            transition: 0.2s;
+        }
+        .loading.loaded {
+            pointer-events: none;
+            background-color: #31333800;
+        }
+        h1.title {
+            margin-top: 10%;
+            font-size: 3rem;
+            filter: drop-shadow(10px 10px 1px #0004);
+        }
+        div.description {
+            filter: drop-shadow(10px 10px 1px #0004);
+        }
+        div.description::before {
+            position: absolute;
+            content: "";
+            width: 32rem;
+            top: 1.5rem;
+            left: 50%;
+            margin-right: -50%;
+            transform: translate(-50%);
+            border-bottom: solid 1px #ddd;
+            animation: underlineAnimation 1.2s ease 0s;
+        }
+
+        @keyframes underlineAnimation {
+            0% {
+                width: 0rem;
+            }
+            100% {
+                width: 32rem;
+            }
+        }
+
+        .user-card {
+            background-color: #2e3035;
+            position: absolute;
+            margin-top: 2rem;
+            left: 50%;
+            margin-right: -50%;
+            transform: translate(-50%);
+            filter: drop-shadow(10px 10px 1px #0004);
+            border-radius: 10px;
+        }
+        .user-card .icon {
+            float: left;
+        }
+        .user-card .icon img {
+            border-radius: 10px;
+            width: 64px;
+            height: 64px;
+        }
+        .user-card .name {
+            margin-top: 0.75rem;
+            margin-right: 1rem;
+            margin-left: 1rem;
+            font-size: 2rem;
+            float: right;
+        }
+
+        .g-recaptcha {
+            position: absolute;
+            margin-top: calc(4.5rem + 64px);
+            left: 50%;
+            margin-right: -50%;
+            transform: translate(-50%);
+            transition: 0.4s;
+            filter: drop-shadow(10px 10px 1px #0004);
+        }
+        .g-recaptcha:hover {
+            filter: drop-shadow(20px 20px 2px #0004);
+        }
+
+        footer {
+            background-color: #2e3035;
+            width: 100%;
+            height: 9vh;
+            padding-top: 1vh;
+            bottom: 0;
+            position: fixed;
+            filter: drop-shadow(0 0 10px #0004);
+        }
+        footer span {
+            font-size: 1rem;
+            top: 1rem;
+        }
+    </style>
+    <body>
+        <div class="loading" id="loading"></div>
+        <h1 class="title">認証</h1>
+        <div class="description" id="description">🤖botの退治にご協力ください🗡️</div>
+
+        <div class="user-card">
+            <div class="icon"><img src="{{member_avatar_url}}" alt="" /></div>
+            <div class="name" id="username">
+                {{member_display_name}} ❌ 未認証
+            </div>
+        </div>
+        <div
+            class="g-recaptcha"
+            id="g_recaptcha"
+            data-sitekey="6LdzuZMpAAAAAGAvfmdOwkBuD0mPRqX3zHLaVyWZ"
+            data-theme="{{color_theme}}"
+            data-callback="recaptchaCallback"
+        ></div>
+
+        <footer>
+            認証ができない場合や、不明な点などございましたら<br />
+            Discordの<a
+                href="https://discord.com/channels/842320961033601044/1074249460051353620"
+                >お問い合わせ</a
+            >からご連絡ください
+        </footer>
+        <script>
+            const DISCORD_TOKEN = location.href.split('/').pop();
+
+            function recaptchaCallback(token) {
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "https://welcome-to.mets-server.com/auth/", true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+
+                xhr.onreadystatechange = () => {
+                    if (
+                        xhr.readyState === XMLHttpRequest.DONE &&
+                        xhr.status === 200
+                    ) {
+                        console.log(xhr.responseText);
+                        if (xhr.responseText == "true") {
+                            document.getElementById("username").innerText =
+                                "{{member_display_name}} ✅ 認証済";
+                            setTimeout(() => {
+                                alert(
+                                    "認証が完了しました\nDiscordをご確認ください\n\nトップページへ遷移します"
+                                );
+                                window.location = "https://mets-svr.com";
+                            }, 1000 * 0.2);
+
+                            return;
+                        } else if (xhr.responseText == "false") {
+                            alert("認証できませんでした、再度お試しください");
+                            window.location.reload();
+                            return;
+                        }
+                    } else if (xhr.readyState === XMLHttpRequest.DONE) {
+                        alert(
+                            `認証中にエラーが発生しました、もう一度お試しください\n${xhr.responseText}`
+                        );
+                        window.location.reload();
+                        return;
+                    }
+                };
+                xhr.send(
+                    `{"rcp_token":"${token}","dsc_token":"${DISCORD_TOKEN}"}`
+                );
+            }
+        </script>
+        {% if member_is_already_authenticated %}
+            <script>
+                var usernameElem = document.getElementById("username");
+                usernameElem.innerText = "{{member_display_name}} ✅ 認証済";
+                var descriptionElem = document.getElementById("description");
+                descriptionElem.innerText = "✅あなたは既に認証されています✅";
+                var gRecaptchaElem = document.getElementById("g_recaptcha");
+                gRecaptchaElem.remove()
+            </script>
+        {% endif %}
+        
+        <script>
+            setTimeout(() => {
+                document.getElementById("loading").classList.add("loaded");
+            }, 1000 * 0.2);
+        </script>
+    </body>
+</html>
